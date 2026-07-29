@@ -1,24 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useAuthStore } from "@/stores/auth-store";
-import { toast } from "sonner";
+import { useLogin, useRegister } from "@/hooks/use-auth";
+import { STRONG_PASSWORD_REGEX, STRONG_PASSWORD_MESSAGE } from "@/types/api";
 
-const formSchema = z.object({
-  email: z.string().email("Please enter a valid email"),
+const signinSchema = z.object({
+  email: z.string().min(1, "Email is required").email("Please enter a valid email"),
   password: z.string().min(1, "Password is required"),
-  name: z.string().optional(),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+const signupSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().min(1, "Email is required").email("Please enter a valid email"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .regex(STRONG_PASSWORD_REGEX, STRONG_PASSWORD_MESSAGE),
+});
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type FormValues = z.infer<typeof signinSchema> & z.infer<typeof signupSchema>;
+
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 type AnyRegister = any;
 
 function AuthField({
@@ -85,45 +92,35 @@ function AuthField({
 }
 
 export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
-  const router = useRouter();
-  const login = useAuthStore((s) => s.login);
-  const [loading, setLoading] = useState(false);
+  const loginMutation = useLogin();
+  const registerMutation = useRegister();
   const isSignup = mode === "signup";
+  const loading = loginMutation.isPending || registerMutation.isPending;
+
+  const schema = isSignup ? signupSchema : signinSchema;
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(schema) as any,
   });
 
-  const onSubmit = async (data: FormValues) => {
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
-
-    if (isSignup && (!data.name || data.name.trim().length < 2)) {
-      toast.error("Please enter your full name");
-      setLoading(false);
-      return;
+  const onSubmit = (data: FormValues) => {
+    if (isSignup) {
+      registerMutation.mutate({
+        name: data.name!,
+        email: data.email,
+        password: data.password,
+      });
+    } else {
+      loginMutation.mutate({
+        email: data.email,
+        password: data.password,
+      });
     }
-
-    if (data.password.length < (isSignup ? 6 : 1)) {
-      toast.error(
-        isSignup
-          ? "Password must be at least 6 characters"
-          : "Please enter your password",
-      );
-      setLoading(false);
-      return;
-    }
-
-    login(data.email, data.name);
-
-    toast.success(
-      isSignup ? "Account created! Redirecting..." : "Welcome back!",
-    );
-    router.push("/home");
   };
 
   return (
@@ -155,7 +152,7 @@ export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
         id="password"
         label="Password"
         type="password"
-        placeholder={isSignup ? "Create a password" : "Enter your password"}
+        placeholder={isSignup ? "Create a strong password" : "Enter your password"}
         icon={Lock}
         error={errors.password?.message}
         register={register}
@@ -178,6 +175,7 @@ export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
         disabled={loading}
         className="mt-2 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-foreground text-sm font-semibold text-background shadow-sm transition-all duration-200 hover:bg-foreground/90 hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
       >
+        {loading && <Loader2 className="size-4 animate-spin" />}
         {loading
           ? "Please wait..."
           : isSignup

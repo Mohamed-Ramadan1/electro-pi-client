@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   FolderKanban,
-  CalendarDays,
+  CheckSquare,
   Bell,
   Settings,
   HelpCircle,
@@ -31,9 +31,9 @@ import { useAuthStore } from "@/stores/auth-store";
 const workspaceItems: { key: string; href: string; icon: LucideIcon }[] = [
   { key: "overview", href: "/home", icon: LayoutDashboard },
   { key: "projects", href: "/projects", icon: FolderKanban },
-  { key: "calendar", href: "/calendar", icon: CalendarDays },
-  { key: "team", href: "/team", icon: Users },
+  { key: "tasks", href: "/tasks", icon: CheckSquare },
   { key: "notifications", href: "/notifications", icon: Bell },
+  { key: "users", href: "/users", icon: Users },
 ];
 
 const systemItems: { key: string; href: string; icon: LucideIcon }[] = [

@@ -1,17 +1,23 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { getStoredToken, setStoredToken, clearStoredToken } from "@/lib/storage";
 
 export interface User {
   email: string;
   name: string;
   initials: string;
+  roles: string[];
 }
 
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, name?: string) => void;
+  isVerifying: boolean;
+  token: string | null;
+  setUser: (email: string, name: string, roles: string[]) => void;
+  setToken: (token: string) => void;
+  setVerifying: (v: boolean) => void;
   logout: () => void;
+  updateUser: (updates: Partial<Pick<User, "name" | "email">>) => void;
 }
 
 function getInitials(email: string, name?: string): string {
@@ -26,34 +32,38 @@ function getInitials(email: string, name?: string): string {
   return email.slice(0, 2).toUpperCase();
 }
 
-function getNameFromEmail(email: string): string {
-  return email.split("@")[0].replace(/[._-]/g, " ");
-}
+export const useAuthStore = create<AuthState>()((set) => ({
+  user: null,
+  isAuthenticated: false,
+  isVerifying: true,
+  token: getStoredToken(),
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      isAuthenticated: false,
+  setUser: (email, name, roles) => {
+    set({
+      user: { email, name, initials: getInitials(email, name), roles },
+      isAuthenticated: true,
+      isVerifying: false,
+    });
+  },
 
-      login: (email, name) => {
-        const displayName = name || getNameFromEmail(email);
-        set({
-          user: {
-            email,
-            name: displayName,
-            initials: getInitials(email, name),
-          },
-          isAuthenticated: true,
-        });
-      },
+  setToken: (token) => {
+    setStoredToken(token);
+    set({ token });
+  },
 
-      logout: () => {
-        set({ user: null, isAuthenticated: false });
-      },
-    }),
-    {
-      name: "electro-pi-auth",
-    },
-  ),
-);
+  setVerifying: (v) => set({ isVerifying: v }),
+
+  logout: () => {
+    clearStoredToken();
+    set({ user: null, isAuthenticated: false, isVerifying: false, token: null });
+  },
+
+  updateUser: (updates) => {
+    set((state) => {
+      if (!state.user) return state;
+      const updated = { ...state.user, ...updates };
+      updated.initials = getInitials(updated.email, updated.name);
+      return { user: updated };
+    });
+  },
+}));

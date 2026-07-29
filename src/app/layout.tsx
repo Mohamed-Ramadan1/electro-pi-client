@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/shared/providers/theme-provider";
+import { QueryProvider } from "@/lib/query/provider";
+import { SessionGate } from "@/components/auth/session-gate";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -26,6 +28,10 @@ export const metadata: Metadata = {
   title: "Electro-Pi — Where teams meet to be productive",
   description:
     "The place where you and your team meet, plan, and build great things together.",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -39,17 +45,19 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          <TooltipProvider delay={300}>
-              {children}
-            </TooltipProvider>
-            <Toaster richColors closeButton />
+          <QueryProvider>
+            <SessionGate>
+              <TooltipProvider delay={300}>{children}</TooltipProvider>
+            </SessionGate>
+          </QueryProvider>
+          <Toaster richColors closeButton />
         </ThemeProvider>
       </body>
     </html>

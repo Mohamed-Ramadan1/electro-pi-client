@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, Search, Command } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores/auth-store";
+import { NotificationsPopover } from "@/components/workspace/notifications-popover";
+
 export function WorkspaceHeader() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
@@ -15,6 +16,7 @@ export function WorkspaceHeader() {
     logout();
     router.push("/auth");
   };
+
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-md">
       <SidebarTrigger className="text-foreground-muted hover:text-foreground" />
@@ -28,26 +30,8 @@ export function WorkspaceHeader() {
         <span className="text-foreground">Workspace</span>
       </div>
 
-      <div className="ml-auto flex items-center gap-2">
-        <button
-          aria-disabled="true"
-          className="hidden cursor-not-allowed items-center gap-2 rounded-md border border-border bg-surface px-3 py-1.5 text-[12px] text-foreground-muted md:flex"
-        >
-          <Search className="size-3.5" />
-          <span>Search everything</span>
-          <span className="ml-6 flex items-center gap-1 rounded-md border border-border bg-background px-1.5 py-0.5 font-mono text-[10px]">
-            <Command className="size-2.5" />K
-          </span>
-        </button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-foreground-muted hover:text-foreground"
-          disabled
-        >
-          <Bell className="size-4" />
-        </Button>
+      <div className="ml-auto flex items-center gap-2.5">
+        <NotificationsPopover />
 
         <Link
           href="/profile"

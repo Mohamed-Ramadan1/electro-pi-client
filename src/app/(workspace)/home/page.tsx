@@ -9,9 +9,8 @@ import {
   TrendingUp,
   LayoutDashboard,
   FolderKanban,
-  CalendarDays,
-  MessageSquare,
-} from "lucide-react";
+  Bell,
+  CheckSquare,} from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
@@ -73,16 +72,16 @@ const pillars = [
     href: "/projects",
   },
   {
-    icon: CalendarDays,
-    label: "Calendar",
-    meta: "5 events today",
-    href: "/calendar",
+    icon: CheckSquare,
+    label: "Tasks",
+    meta: "5 pending",
+    href: "/tasks",
   },
   {
-    icon: MessageSquare,
-    label: "Messages",
-    meta: "8 unread",
-    href: "/messages",
+    icon: Bell,
+    label: "Notifications",
+    meta: "2 new",
+    href: "/notifications",
   },
 ];
 
