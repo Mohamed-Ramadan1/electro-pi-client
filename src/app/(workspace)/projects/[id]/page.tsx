@@ -575,36 +575,30 @@ function TaskCard({
 
   return (
     <>
-      <button
-        onClick={() => setDetailOpen(true)}
-        className="w-full rounded-lg border border-border bg-background p-3 text-left hover:border-primary/20 transition-colors"
-      >
+      <div className="w-full rounded-lg border border-border bg-background p-5 hover:border-primary/20 transition-colors">
         <div className="flex items-start justify-between gap-2">
-          <p className="text-[13px] font-medium text-foreground line-clamp-2">
+          <p className="text-[15px] font-medium text-foreground line-clamp-2">
             {task.title}
           </p>
           {isAdmin && (
-            <span
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(task.id);
-              }}
-              className="shrink-0 rounded p-0.5 text-foreground-muted hover:text-destructive transition-colors"
+            <button
+              onClick={() => onDelete(task.id)}
+              className="shrink-0 rounded p-0.5 text-foreground-muted hover:text-destructive transition-colors cursor-pointer"
             >
-              <Trash2 className="size-3" />
-            </span>
+              <Trash2 className="size-3.5" />
+            </button>
           )}
         </div>
 
         {task.description && (
-          <p className="mt-1 text-[12px] text-foreground-muted line-clamp-2">
+          <p className="mt-1.5 text-[13px] text-foreground-muted line-clamp-2">
             {task.description}
           </p>
         )}
 
-        <div className="mt-2.5 flex items-center justify-between gap-2">
+        <div className="mt-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Flag className={`size-3 ${priorityColors[task.priority]}`} />
+            <Flag className={`size-3.5 ${priorityColors[task.priority]}`} />
             {task.assignee && (
               <Avatar className="size-5">
                 <AvatarFallback className="text-[9px]">
@@ -613,7 +607,7 @@ function TaskCard({
               </Avatar>
             )}
             {task.dueDate && (
-              <span className="text-[11px] text-foreground-muted">
+              <span className="text-[12px] text-foreground-muted">
                 {new Date(task.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
               </span>
             )}
@@ -622,20 +616,16 @@ function TaskCard({
           {canChange && (
             <div className="flex items-center gap-0.5">
               {!isDone && task.status !== tasksStatus.TODO && (
-                <span
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onStatusChange(task.id, tasksStatus.TODO);
-                  }}
-                  className="rounded p-0.5 text-foreground-muted hover:text-primary transition-colors"
+                <button
+                  onClick={() => onStatusChange(task.id, tasksStatus.TODO)}
+                  className="rounded p-0.5 text-foreground-muted hover:text-primary transition-colors cursor-pointer"
                   title="Move to Todo"
                 >
-                  <ChevronLeft className="size-3.5" />
-                </span>
+                  <ChevronLeft className="size-4" />
+                </button>
               )}
-              <span
-                onClick={(e) => {
-                  e.stopPropagation();
+              <button
+                onClick={() => {
                   if (task.status === tasksStatus.TODO) {
                     onStatusChange(task.id, tasksStatus.INPROGRESS);
                   } else if (task.status === tasksStatus.INPROGRESS) {
@@ -644,7 +634,7 @@ function TaskCard({
                     onStatusChange(task.id, tasksStatus.TODO);
                   }
                 }}
-                className="rounded p-0.5 text-foreground-muted hover:text-primary transition-colors"
+                className="rounded p-0.5 text-foreground-muted hover:text-primary transition-colors cursor-pointer"
                 title={
                   task.status === tasksStatus.TODO
                     ? "Move to In Progress"
@@ -654,18 +644,25 @@ function TaskCard({
                 }
               >
                 {task.status === tasksStatus.DONE ? (
-                  <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="1 4 1 10 7 10" />
                     <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
                   </svg>
                 ) : (
-                  <ChevronRight className="size-3.5" />
+                  <ChevronRight className="size-4" />
                 )}
-              </span>
+              </button>
             </div>
           )}
         </div>
-      </button>
+
+        <button
+          onClick={() => setDetailOpen(true)}
+          className="mt-3 w-full rounded-md bg-primary/10 hover:bg-primary/20 text-primary text-[13px] font-medium py-1.5 transition-colors cursor-pointer"
+        >
+          View Details
+        </button>
+      </div>
 
       <TaskDetailDialog
         open={detailOpen}
@@ -706,16 +703,16 @@ function TaskColumn({
   onUnassign: (taskId: string) => void;
 }) {
   return (
-    <div className={`rounded-lg border-l-2 ${color} bg-muted/20 p-3`}>
-      <div className="flex items-center gap-2 mb-2.5">
-        <div className={`flex size-5 items-center justify-center rounded ${iconBg}`}>
-          <span className="text-[10px] font-medium">{tasks.length}</span>
+    <div className={`rounded-lg border-l-2 ${color} bg-muted/20 p-4`}>
+      <div className="flex items-center gap-2 mb-3">
+        <div className={`flex size-6 items-center justify-center rounded ${iconBg}`}>
+          <span className="text-[11px] font-medium">{tasks.length}</span>
         </div>
-        <span className="text-[12px] font-medium text-foreground-muted uppercase tracking-wide">
+        <span className="text-[13px] font-medium text-foreground-muted uppercase tracking-wide">
           {label}
         </span>
       </div>
-      <div className="space-y-2 max-h-[360px] overflow-y-auto">
+      <div className="space-y-3 max-h-[400px] overflow-y-auto">
         {tasks.map((task) => (
           <TaskCard
             key={task.id}
@@ -730,7 +727,7 @@ function TaskColumn({
           />
         ))}
         {tasks.length === 0 && (
-          <p className="py-4 text-center text-[12px] text-foreground-muted">
+          <p className="py-4 text-center text-[13px] text-foreground-muted">
             No tasks
           </p>
         )}
