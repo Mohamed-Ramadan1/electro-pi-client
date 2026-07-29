@@ -6,9 +6,6 @@ import {
   LayoutDashboard,
   FolderKanban,
   CheckSquare,
-  Bell,
-  Settings,
-  HelpCircle,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -33,13 +30,7 @@ const workspaceItems: { key: string; href: string; icon: LucideIcon }[] = [
   { key: "overview", href: "/home", icon: LayoutDashboard },
   { key: "projects", href: "/projects", icon: FolderKanban },
   { key: "tasks", href: "/tasks", icon: CheckSquare },
-  { key: "notifications", href: "/notifications", icon: Bell },
   { key: "users", href: "/users", icon: Users },
-];
-
-const systemItems: { key: string; href: string; icon: LucideIcon }[] = [
-  { key: "settings", href: "/settings", icon: Settings },
-  { key: "support", href: "/support", icon: HelpCircle },
 ];
 
 function SidebarNavItem({
@@ -126,27 +117,6 @@ export function WorkspaceSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {visibleWorkspaceItems.map((item) => (
-                <SidebarNavItem
-                  key={item.key}
-                  href={item.href}
-                  icon={item.icon}
-                  label={item.key}
-                  isActive={isCurrentPath(item.href)}
-                />
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          {!collapsed ? (
-            <SidebarGroupLabel className="font-mono text-[10px] uppercase tracking-[0.2em] text-foreground-muted">
-              System
-            </SidebarGroupLabel>
-          ) : null}
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {systemItems.map((item) => (
                 <SidebarNavItem
                   key={item.key}
                   href={item.href}

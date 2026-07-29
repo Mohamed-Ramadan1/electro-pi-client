@@ -25,7 +25,7 @@ export const authService = {
     return res.data;
   },
 
-  me: async (): Promise<{ email: string; name: string; roles: string[] }> => {
+  me: async (): Promise<{ id: string; email: string; name: string; roles: string[] }> => {
     console.log("[AuthService] 👤 GET /users/members/me — sending request...");
     const res = await apiClient.get("/users/members/me");
     console.log("[AuthService] 👤 /me RAW response:", {

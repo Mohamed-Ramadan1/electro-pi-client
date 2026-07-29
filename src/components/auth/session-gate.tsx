@@ -30,7 +30,7 @@ export function SessionGate({ children }: { children: React.ReactNode }) {
           name: user.name,
           roles: user.roles,
         });
-        setUser(user.email, user.name, user.roles);
+        setUser(user.id, user.email, user.name, user.roles);
       })
       .catch((error) => {
         if (cancelled) return;

@@ -2,8 +2,6 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
-
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -67,57 +65,6 @@
 }
 
 :root {
-  --background: #fafaf7;
-  --background-secondary: #f3f1ec;
-  --background-soft: #ede9e2;
-  --surface: #f7f5f1;
-  --foreground: #1a1a1c;
-  --foreground-secondary: #4a4744;
-  --foreground-muted: #6e6b66;
-  --divider: #ece7de;
-  --card: #ffffff;
-  --card-foreground: #1a1a1c;
-  --popover: #ffffff;
-  --popover-foreground: #1a1a1c;
-  --primary: #7c3aed;
-  --primary-foreground: #ffffff;
-  --secondary: #f3f1ec;
-  --secondary-foreground: #1a1a1c;
-  --muted: #ede9e2;
-  --muted-foreground: #6e6b66;
-  --accent: #f59e0b;
-  --accent-foreground: #1a1a1c;
-  --highlight: #7c3aed;
-  --destructive: #ef4444;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --info: #3b82f6;
-  --border: #e0dbd2;
-  --input: #e0dbd2;
-  --ring: #7c3aed;
-  --radius: 0.625rem;
-  --sidebar: #f3f1ec;
-  --sidebar-foreground: #1a1a1c;
-  --sidebar-primary: #7c3aed;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #ede9e2;
-  --sidebar-accent-foreground: #1a1a1c;
-  --sidebar-border: #e0dbd2;
-  --sidebar-ring: #7c3aed;
-  --chart-1: #7c3aed;
-  --chart-2: #f59e0b;
-  --chart-3: #10b981;
-  --chart-4: #3b82f6;
-  --chart-5: #8b5cf6;
-
-  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
-  --shadow-small: 0 1px 2px rgba(15, 23, 42, 0.06);
-  --shadow-medium: 0 8px 24px rgba(15, 23, 42, 0.08);
-  --shadow-large: 0 20px 50px rgba(15, 23, 42, 0.12);
-  --shadow-glow: 0 0 40px rgba(124, 58, 237, 0.15);
-}
-
-.dark {
   --background: #0f0f11;
   --background-secondary: #161618;
   --background-soft: #1c1c1e;
@@ -154,6 +101,17 @@
   --sidebar-accent-foreground: #f5f3ee;
   --sidebar-border: #27272a;
   --sidebar-ring: #a78bfa;
+  --chart-1: #a78bfa;
+  --chart-2: #fbbf24;
+  --chart-3: #34d399;
+  --chart-4: #60a5fa;
+  --chart-5: #8b5cf6;
+
+  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+  --shadow-small: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-medium: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --shadow-large: 0 20px 50px rgba(15, 23, 42, 0.12);
+  --shadow-glow: 0 0 40px rgba(124, 58, 237, 0.15);
 }
 
 @layer base {
@@ -175,25 +133,6 @@
 }
 
 .auth-pattern {
-  background-color: var(--background);
-  background-image:
-    radial-gradient(ellipse at 18% 82%, rgba(124, 58, 237, 0.07), transparent 45%),
-    radial-gradient(ellipse at 82% 22%, rgba(245, 158, 11, 0.05), transparent 45%),
-    radial-gradient(ellipse at 50% 50%, rgba(124, 58, 237, 0.03), transparent 60%),
-    radial-gradient(circle at 50% 50%, var(--border) 0.5px, transparent 0.5px);
-  background-size:
-    100% 100%,
-    100% 100%,
-    100% 100%,
-    20px 20px;
-  background-position:
-    center,
-    center,
-    center,
-    0 0;
-}
-
-.dark .auth-pattern {
   background-color: var(--background);
   background-image:
     radial-gradient(ellipse at 18% 82%, rgba(167, 139, 250, 0.12), transparent 45%),

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { getStoredToken, setStoredToken, clearStoredToken } from "@/lib/storage";
 
 export interface User {
+  id: string;
   email: string;
   name: string;
   initials: string;
@@ -13,7 +14,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isVerifying: boolean;
   token: string | null;
-  setUser: (email: string, name: string, roles: string[]) => void;
+  setUser: (id: string, email: string, name: string, roles: string[]) => void;
   setToken: (token: string) => void;
   setVerifying: (v: boolean) => void;
   logout: () => void;
@@ -38,9 +39,9 @@ export const useAuthStore = create<AuthState>()((set) => ({
   isVerifying: true,
   token: getStoredToken(),
 
-  setUser: (email, name, roles) => {
+  setUser: (id, email, name, roles) => {
     set({
-      user: { email, name, initials: getInitials(email, name), roles },
+      user: { id, email, name, initials: getInitials(email, name), roles },
       isAuthenticated: true,
       isVerifying: false,
     });

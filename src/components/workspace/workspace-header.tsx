@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores/auth-store";
-import { NotificationsPopover } from "@/components/workspace/notifications-popover";
 
 export function WorkspaceHeader() {
   const router = useRouter();
@@ -31,8 +30,6 @@ export function WorkspaceHeader() {
       </div>
 
       <div className="ml-auto flex items-center gap-2.5">
-        <NotificationsPopover />
-
         <Link
           href="/profile"
           className="grid size-8 shrink-0 place-items-center rounded-md bg-primary/15 text-primary"

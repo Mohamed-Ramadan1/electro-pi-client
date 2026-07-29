@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ThemeProvider } from "@/shared/providers/theme-provider";
 import { QueryProvider } from "@/lib/query/provider";
 import { SessionGate } from "@/components/auth/session-gate";
 import { Toaster } from "sonner";
@@ -42,23 +41,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} h-full antialiased`}
-      suppressHydrationWarning
+      className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col" suppressHydrationWarning>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
+      <body className="min-h-full flex flex-col">
           <QueryProvider>
             <SessionGate>
               <TooltipProvider delay={300}>{children}</TooltipProvider>
             </SessionGate>
           </QueryProvider>
           <Toaster richColors closeButton />
-        </ThemeProvider>
       </body>
     </html>
   );

@@ -23,7 +23,7 @@ export function useLogin() {
       } else {
         console.warn("[useLogin] ⚠️ No token in login response — relying on cookies only");
       }
-      setUser(response.user.email, response.user.name, response.user.roles);
+      setUser(response.user.id, response.user.email, response.user.name, response.user.roles);
       toast.success(response.message || "Welcome back!");
       router.push("/home");
     },
@@ -48,7 +48,7 @@ export function useRegister() {
       } else {
         console.warn("[useRegister] ⚠️ No token in register response — relying on cookies only");
       }
-      setUser(response.user.email, response.user.name, response.user.roles);
+      setUser(response.user.id, response.user.email, response.user.name, response.user.roles);
       toast.success(response.message || "Account created!");
       router.push("/home");
     },
