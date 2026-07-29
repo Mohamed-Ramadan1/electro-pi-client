@@ -102,3 +102,39 @@ export function useDeleteTask() {
     },
   });
 }
+
+export function useAssignTask() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      taskId,
+      userId,
+    }: {
+      taskId: string;
+      userId: string;
+    }) => tasksService.assign(taskId, userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      toast.success("Task assigned");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to assign task");
+    },
+  });
+}
+
+export function useUnassignTask() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: tasksService.unassign,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      toast.success("Task unassigned");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to unassign task");
+    },
+  });
+}

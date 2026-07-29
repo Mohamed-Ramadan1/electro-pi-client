@@ -57,6 +57,8 @@ import {
   useUpdateTaskStatus,
   useUpdateTask,
   useDeleteTask,
+  useAssignTask,
+  useUnassignTask,
 } from "@/hooks/use-tasks";
 import { useUsers } from "@/hooks/use-users";
 import { useIsAdmin } from "@/hooks/use-role";
@@ -105,6 +107,8 @@ export default function ProjectDetailPage() {
   const updateTaskStatus = useUpdateTaskStatus();
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
+  const assignTask = useAssignTask();
+  const unassignTask = useUnassignTask();
   const currentUserId = useAuthStore((s) => s.user?.id);
 
   const [addMemberOpen, setAddMemberOpen] = useState(false);
@@ -345,6 +349,9 @@ export default function ProjectDetailPage() {
                   onDelete={(taskId) => deleteTask.mutate(taskId)}
                   isAdmin={isAdmin}
                   currentUserId={currentUserId}
+                  members={project?.members ?? []}
+                  onAssign={(taskId, userId) => assignTask.mutate({ taskId, userId })}
+                  onUnassign={(taskId) => unassignTask.mutate(taskId)}
                 />
                 <TaskColumn
                   label="In Progress"
@@ -355,6 +362,9 @@ export default function ProjectDetailPage() {
                   onDelete={(taskId) => deleteTask.mutate(taskId)}
                   isAdmin={isAdmin}
                   currentUserId={currentUserId}
+                  members={project?.members ?? []}
+                  onAssign={(taskId, userId) => assignTask.mutate({ taskId, userId })}
+                  onUnassign={(taskId) => unassignTask.mutate(taskId)}
                 />
                 <TaskColumn
                   label="Done"
@@ -365,6 +375,9 @@ export default function ProjectDetailPage() {
                   onDelete={(taskId) => deleteTask.mutate(taskId)}
                   isAdmin={isAdmin}
                   currentUserId={currentUserId}
+                  members={project?.members ?? []}
+                  onAssign={(taskId, userId) => assignTask.mutate({ taskId, userId })}
+                  onUnassign={(taskId) => unassignTask.mutate(taskId)}
                 />
               </div>
             ) : (
@@ -536,12 +549,18 @@ function TaskCard({
   onDelete,
   isAdmin,
   currentUserId,
+  members,
+  onAssign,
+  onUnassign,
 }: {
   task: TaskDto;
   onStatusChange: (taskId: string, status: string) => void;
   onDelete: (taskId: string) => void;
   isAdmin: boolean;
   currentUserId?: string;
+  members: UserDto[];
+  onAssign: (taskId: string, userId: string) => void;
+  onUnassign: (taskId: string) => void;
 }) {
   const [detailOpen, setDetailOpen] = useState(false);
   const isAssigned = currentUserId && task.assignee?.id === currentUserId;
@@ -652,6 +671,10 @@ function TaskCard({
         open={detailOpen}
         onOpenChange={setDetailOpen}
         taskId={task.id}
+        members={members}
+        isAdmin={isAdmin}
+        onAssign={onAssign}
+        onUnassign={onUnassign}
       />
     </>
   );
@@ -666,6 +689,9 @@ function TaskColumn({
   onDelete,
   isAdmin,
   currentUserId,
+  members,
+  onAssign,
+  onUnassign,
 }: {
   label: string;
   tasks: TaskDto[];
@@ -675,6 +701,9 @@ function TaskColumn({
   onDelete: (taskId: string) => void;
   isAdmin: boolean;
   currentUserId?: string;
+  members: UserDto[];
+  onAssign: (taskId: string, userId: string) => void;
+  onUnassign: (taskId: string) => void;
 }) {
   return (
     <div className={`rounded-lg border-l-2 ${color} bg-muted/20 p-3`}>
@@ -695,6 +724,9 @@ function TaskColumn({
             onDelete={onDelete}
             isAdmin={isAdmin}
             currentUserId={currentUserId}
+            members={members}
+            onAssign={onAssign}
+            onUnassign={onUnassign}
           />
         ))}
         {tasks.length === 0 && (
@@ -918,11 +950,20 @@ function TaskDetailDialog({
   open,
   onOpenChange,
   taskId,
+  members,
+  isAdmin,
+  onAssign,
+  onUnassign,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   taskId: string;
+  members: UserDto[];
+  isAdmin: boolean;
+  onAssign: (taskId: string, userId: string) => void;
+  onUnassign: (taskId: string) => void;
 }) {
+  const [assignOpen, setAssignOpen] = useState(false);
   const { data, isLoading, isError, error } = useQuery<SingleTaskResponse>({
     queryKey: ["tasks", taskId],
     queryFn: () => tasksService.getById(taskId),
@@ -998,19 +1039,71 @@ function TaskDetailDialog({
                 </span>
               </div>
 
-              {task.assignee && (
+              <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 text-[13px]">
                   <span className="text-foreground-muted">Assignee:</span>
-                  <Avatar className="size-6">
-                    <AvatarFallback className="text-[10px]">
-                      {task.assignee.firstName?.[0] ?? "?"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-foreground">
-                    {task.assignee.firstName} {task.assignee.lastName}
-                  </span>
+                  {task.assignee ? (
+                    <>
+                      <Avatar className="size-6">
+                        <AvatarFallback className="text-[10px]">
+                          {task.assignee.firstName?.[0] ?? "?"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-foreground">
+                        {task.assignee.firstName} {task.assignee.lastName}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-foreground-muted italic">Unassigned</span>
+                  )}
                 </div>
-              )}
+                {isAdmin && members.length > 0 && (
+                  <div className="relative">
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => setAssignOpen(!assignOpen)}
+                    >
+                      {task.assignee ? "Change" : "Assign"}
+                    </Button>
+                    {assignOpen && (
+                      <div className="absolute right-0 top-full mt-1 z-50 w-44 rounded-lg border border-border bg-popover p-1 shadow-lg">
+                        {task.assignee && (
+                          <button
+                            onClick={() => {
+                              onUnassign(taskId);
+                              setAssignOpen(false);
+                            }}
+                            className="w-full rounded-md px-2 py-1.5 text-left text-[12px] text-destructive hover:bg-muted"
+                          >
+                            <X className="size-3 inline mr-1.5" />
+                            Unassign
+                          </button>
+                        )}
+                        {members
+                          .filter((m) => m.id !== task.assignee?.id)
+                          .map((m) => (
+                            <button
+                              key={m.id}
+                              onClick={() => {
+                                onAssign(taskId, m.id);
+                                setAssignOpen(false);
+                              }}
+                              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[12px] text-foreground hover:bg-muted"
+                            >
+                              <Avatar className="size-5">
+                                <AvatarFallback className="text-[9px]">
+                                  {getInitials(m.name)}
+                                </AvatarFallback>
+                              </Avatar>
+                              {m.name}
+                            </button>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {task.images.length > 0 && (
                 <div className="space-y-2">
