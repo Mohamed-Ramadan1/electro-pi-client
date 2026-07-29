@@ -4,7 +4,6 @@ import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { toast } from "sonner";
 import {
   Plus,
   Search,
@@ -13,12 +12,11 @@ import {
   ChevronRight,
   Mail,
   User,
-  Shield,
   CheckCircle2,
   XCircle,
   Trash2,
-  UserCog,
   Ban,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -38,69 +36,110 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useUsers, useCreateUser, useActivateUser, useDeactivateUser, useDeleteUser } from "@/hooks/use-users";
+import type { UserDto } from "@/types/api";
+import {
+  UserRoles,
+  STRONG_PASSWORD_REGEX,
+  STRONG_PASSWORD_MESSAGE,
+} from "@/types/api";
 
-// ─── Types & Mock Data ────────────────────────────────────────
-
-type Role = "admin" | "member" | "viewer";
-
-interface UserData {
-  id: string;
-  name: string;
-  email: string;
-  role: Role;
-  isActive: boolean;
-  createdAt: Date;
-}
-
-const roleConfig: Record<Role, { label: string; variant: "default" | "secondary" | "outline" }> = {
-  admin: { label: "Admin", variant: "default" },
-  member: { label: "Member", variant: "secondary" },
-  viewer: { label: "Viewer", variant: "outline" },
+const roleConfig: Record<string, { variant: "default" | "secondary" | "outline" }> = {
+  [UserRoles.ADMIN]: { variant: "default" },
+  [UserRoles.MEMBER]: { variant: "secondary" },
 };
-
-const initialUsers: UserData[] = [
-  { id: "1", name: "Jane Doe", email: "jane@electropi.com", role: "admin", isActive: true, createdAt: new Date("2026-01-15") },
-  { id: "2", name: "Alex Chen", email: "alex@electropi.com", role: "member", isActive: true, createdAt: new Date("2026-02-20") },
-  { id: "3", name: "Sarah Kim", email: "sarah@electropi.com", role: "member", isActive: true, createdAt: new Date("2026-03-10") },
-  { id: "4", name: "Marcus Webb", email: "marcus@electropi.com", role: "viewer", isActive: false, createdAt: new Date("2026-03-22") },
-  { id: "5", name: "Emily Park", email: "emily@electropi.com", role: "member", isActive: true, createdAt: new Date("2026-04-05") },
-  { id: "6", name: "David Silva", email: "david@electropi.com", role: "member", isActive: true, createdAt: new Date("2026-04-18") },
-  { id: "7", name: "Aisha Patel", email: "aisha@electropi.com", role: "viewer", isActive: true, createdAt: new Date("2026-05-01") },
-  { id: "8", name: "Tom Berger", email: "tom@electropi.com", role: "member", isActive: false, createdAt: new Date("2026-05-14") },
-  { id: "9", name: "Nina Kovac", email: "nina@electropi.com", role: "admin", isActive: true, createdAt: new Date("2026-06-02") },
-  { id: "10", name: "Omar Hassan", email: "omar@electropi.com", role: "member", isActive: true, createdAt: new Date("2026-06-19") },
-  { id: "11", name: "Lucy Zhang", email: "lucy@electropi.com", role: "viewer", isActive: true, createdAt: new Date("2026-07-03") },
-  { id: "12", name: "Ravi Mehta", email: "ravi@electropi.com", role: "member", isActive: true, createdAt: new Date("2026-07-10") },
-];
 
 const createUserSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email"),
-  role: z.enum(["admin", "member", "viewer"]),
-  isActive: z.boolean(),
+  email: z.string().min(1, "Email is required").email("Please enter a valid email"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .regex(STRONG_PASSWORD_REGEX, STRONG_PASSWORD_MESSAGE),
+  roles: z
+    .array(z.enum([UserRoles.ADMIN, UserRoles.MEMBER]))
+    .min(1, "Select at least one role"),
 });
 
 type CreateUserValues = z.infer<typeof createUserSchema>;
 
 const ITEMS_PER_PAGE = 6;
 
-let nextId = 100;
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase();
+}
+
+function formatDate(d: string) {
+  return new Date(d).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function RoleBadge({ role }: { role: string }) {
+  const config = roleConfig[role] ?? { variant: "outline" as const };
+  return (
+    <Badge variant={config.variant} className="text-[11px] font-medium capitalize">
+      {role}
+    </Badge>
+  );
+}
+
+function SkeletonRow() {
+  return (
+    <tr className="bg-background">
+      <td className="px-4 py-3.5">
+        <div className="flex items-center gap-3">
+          <div className="size-9 rounded-lg bg-muted animate-pulse" />
+          <div className="space-y-1.5">
+            <div className="h-3.5 w-24 rounded bg-muted animate-pulse" />
+            <div className="h-3 w-32 rounded bg-muted animate-pulse" />
+          </div>
+        </div>
+      </td>
+      <td className="hidden px-4 py-3.5 sm:table-cell">
+        <div className="h-5 w-14 rounded bg-muted animate-pulse" />
+      </td>
+      <td className="hidden px-4 py-3.5 md:table-cell">
+        <div className="h-5 w-16 rounded bg-muted animate-pulse" />
+      </td>
+      <td className="hidden px-4 py-3.5 lg:table-cell">
+        <div className="h-4 w-20 rounded bg-muted animate-pulse" />
+      </td>
+      <td className="px-4 py-3.5 text-right">
+        <div className="ml-auto h-5 w-8 rounded bg-muted animate-pulse" />
+      </td>
+    </tr>
+  );
+}
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<UserData[]>(initialUsers);
+  const { data, isLoading } = useUsers();
+  const createUser = useCreateUser();
+  const activateUser = useActivateUser();
+  const deactivateUser = useDeactivateUser();
+  const deleteUser = useDeleteUser();
+
+  const users = data?.users ?? [];
+
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [createOpen, setCreateOpen] = useState(false);
-  const [creating, setCreating] = useState(false);
 
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm<CreateUserValues>({
     resolver: zodResolver(createUserSchema),
-    defaultValues: { role: "member", isActive: true },
+    defaultValues: { roles: [] },
+    mode: "onChange",
   });
 
   const filteredUsers = useMemo(() => {
@@ -110,7 +149,7 @@ export default function UsersPage() {
       (u) =>
         u.name.toLowerCase().includes(q) ||
         u.email.toLowerCase().includes(q) ||
-        u.role.toLowerCase().includes(q),
+        u.roles.some((r) => r.toLowerCase().includes(q)),
     );
   }, [users, search]);
 
@@ -120,45 +159,34 @@ export default function UsersPage() {
     page * ITEMS_PER_PAGE,
   );
 
-  const onCreate = async (data: CreateUserValues) => {
-    setCreating(true);
-    await new Promise((r) => setTimeout(r, 600));
-    const newUser: UserData = {
-      id: String(nextId++),
-      name: data.name,
-      email: data.email,
-      role: data.role,
-      isActive: data.isActive,
-      createdAt: new Date(),
-    };
-    setUsers((prev) => [newUser, ...prev]);
-    toast.success("User created successfully");
-    reset();
-    setCreateOpen(false);
-    setCreating(false);
-  };
-
-  const toggleActive = (id: string) => {
-    setUsers((prev) =>
-      prev.map((u) => (u.id === id ? { ...u, isActive: !u.isActive } : u)),
+  const onCreate = (data: CreateUserValues) => {
+    createUser.mutate(
+      {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        roles: data.roles,
+      },
+      {
+        onSuccess: () => {
+          reset();
+          setCreateOpen(false);
+        },
+      },
     );
-    toast.success("User status updated");
   };
 
-  const deleteUser = (id: string) => {
-    setUsers((prev) => prev.filter((u) => u.id !== id));
-    toast.success("User removed");
+  const toggleActive = (user: UserDto) => {
+    if (user.isActive) {
+      deactivateUser.mutate(user.id);
+    } else {
+      activateUser.mutate(user.id);
+    }
   };
 
-  const formatDate = (d: Date) =>
-    d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-
-  const getInitials = (name: string) =>
-    name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
+  const handleDelete = (id: string) => {
+    deleteUser.mutate(id);
+  };
 
   return (
     <div className="px-6 py-10">
@@ -174,10 +202,7 @@ export default function UsersPage() {
             Manage team members, roles, and access.
           </p>
         </div>
-        <Button
-          onClick={() => setCreateOpen(true)}
-          className="gap-1.5"
-        >
+        <Button onClick={() => setCreateOpen(true)} className="gap-1.5">
           <Plus className="size-3.5" />
           Create User
         </Button>
@@ -211,7 +236,7 @@ export default function UsersPage() {
                   User
                 </th>
                 <th className="hidden px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.15em] text-foreground-muted sm:table-cell">
-                  Role
+                  Roles
                 </th>
                 <th className="hidden px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.15em] text-foreground-muted md:table-cell">
                   Status
@@ -225,105 +250,9 @@ export default function UsersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {paginatedUsers.map((user) => (
-                <tr
-                  key={user.id}
-                  className="bg-background transition-colors hover:bg-muted/30"
-                >
-                  <td className="px-4 py-3.5">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="size-9 rounded-lg">
-                        <AvatarFallback
-                          className={cn(
-                            "rounded-lg font-display text-sm font-semibold",
-                            user.role === "admin"
-                              ? "bg-primary/15 text-primary"
-                              : user.role === "member"
-                                ? "bg-info/15 text-info"
-                                : "bg-muted text-foreground-muted",
-                          )}
-                        >
-                          {getInitials(user.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0">
-                        <p className="truncate text-[13px] font-semibold text-foreground">
-                          {user.name}
-                        </p>
-                        <p className="truncate text-[12px] text-foreground-muted">
-                          {user.email}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="hidden px-4 py-3.5 sm:table-cell">
-                    <Badge variant={roleConfig[user.role].variant} className="text-[11px] font-medium">
-                      {roleConfig[user.role].label}
-                    </Badge>
-                  </td>
-                  <td className="hidden px-4 py-3.5 md:table-cell">
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-1.5 text-[12px] font-medium",
-                        user.isActive ? "text-success" : "text-foreground-muted",
-                      )}
-                    >
-                      {user.isActive ? (
-                        <CheckCircle2 className="size-3" />
-                      ) : (
-                        <XCircle className="size-3" />
-                      )}
-                      {user.isActive ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  <td className="hidden whitespace-nowrap px-4 py-3.5 text-[12px] text-foreground-muted lg:table-cell">
-                    {formatDate(user.createdAt)}
-                  </td>
-                  <td className="px-4 py-3.5 text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                      render={
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-foreground-muted hover:text-foreground"
-                        />
-                      }
-                    >
-                      <MoreHorizontal className="size-4" />
-                    </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-44">
-                        <DropdownMenuItem onClick={() => toggleActive(user.id)}>
-                          {user.isActive ? (
-                            <>
-                              <Ban className="size-3.5" />
-                              Deactivate
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle2 className="size-3.5" />
-                              Activate
-                            </>
-                          )}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem disabled>
-                          <UserCog className="size-3.5" />
-                          Change role
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => deleteUser(user.id)}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="size-3.5" />
-                          Remove
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </td>
-                </tr>
-              ))}
-              {paginatedUsers.length === 0 && (
+              {isLoading ? (
+                Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)
+              ) : paginatedUsers.length === 0 ? (
                 <tr>
                   <td
                     colSpan={5}
@@ -332,6 +261,110 @@ export default function UsersPage() {
                     No users found.
                   </td>
                 </tr>
+              ) : (
+                paginatedUsers.map((user) => {
+                  const primaryRole = user.roles[0] ?? "member";
+                  return (
+                    <tr
+                      key={user.id}
+                      className="bg-background transition-colors hover:bg-muted/30"
+                    >
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="size-9 rounded-lg">
+                            <AvatarFallback
+                              className={cn(
+                                "rounded-lg font-display text-sm font-semibold",
+                                user.roles.includes("admin")
+                                  ? "bg-primary/15 text-primary"
+                                  : primaryRole === "member"
+                                    ? "bg-info/15 text-info"
+                                    : "bg-muted text-foreground-muted",
+                              )}
+                            >
+                              {getInitials(user.name)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <p className="truncate text-[13px] font-semibold text-foreground">
+                              {user.name}
+                            </p>
+                            <p className="truncate text-[12px] text-foreground-muted">
+                              {user.email}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="hidden px-4 py-3.5 sm:table-cell">
+                        <div className="flex flex-wrap gap-1">
+                          {user.roles.map((r) => (
+                            <RoleBadge key={r} role={r} />
+                          ))}
+                        </div>
+                      </td>
+                      <td className="hidden px-4 py-3.5 md:table-cell">
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1.5 text-[12px] font-medium",
+                            user.isActive ? "text-success" : "text-foreground-muted",
+                          )}
+                        >
+                          {user.isActive ? (
+                            <CheckCircle2 className="size-3" />
+                          ) : (
+                            <XCircle className="size-3" />
+                          )}
+                          {user.isActive ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td className="hidden whitespace-nowrap px-4 py-3.5 text-[12px] text-foreground-muted lg:table-cell">
+                        {formatDate(user.createdAt)}
+                      </td>
+                      <td className="px-4 py-3.5 text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger
+                            render={
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-foreground-muted hover:text-foreground"
+                              />
+                            }
+                          >
+                            <MoreHorizontal className="size-4" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuItem
+                              onClick={() => toggleActive(user)}
+                              disabled={activateUser.isPending || deactivateUser.isPending}
+                            >
+                              {user.isActive ? (
+                                <>
+                                  <Ban className="size-3.5" />
+                                  Deactivate
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle2 className="size-3.5" />
+                                  Activate
+                                </>
+                              )}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleDelete(user.id)}
+                              disabled={deleteUser.isPending}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="size-3.5" />
+                              Remove
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -364,7 +397,6 @@ export default function UsersPage() {
         )}
       </div>
 
-      {/* ─── Create User Dialog ──────────────────────────── */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -421,33 +453,51 @@ export default function UsersPage() {
 
             <div className="space-y-1.5">
               <label
-                htmlFor="create-role"
+                htmlFor="create-password"
                 className="block text-[13px] font-medium text-foreground"
               >
-                Role
+                Password
               </label>
-              <div className="relative">
-                <Shield className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-foreground-muted" />
-                <select
-                  id="create-role"
-                  {...register("role")}
-                  className="h-10 w-full rounded-lg border border-border bg-background pl-10 pr-3 text-[13px] text-foreground shadow-sm transition-all duration-200 focus-visible:outline-none focus-visible:border-primary/40 focus-visible:ring-4 focus-visible:ring-primary/10"
-                >
-                  <option value="admin">Admin</option>
-                  <option value="member">Member</option>
-                  <option value="viewer">Viewer</option>
-                </select>
-              </div>
+              <input
+                id="create-password"
+                type="password"
+                {...register("password")}
+                placeholder="Min. 8 chars, uppercase, lowercase, number & symbol"
+                className="h-10 w-full rounded-lg border border-border bg-background px-3 text-[13px] text-foreground shadow-sm transition-all duration-200 placeholder:text-foreground/40 focus-visible:outline-none focus-visible:border-primary/40 focus-visible:ring-4 focus-visible:ring-primary/10"
+              />
+              {errors.password && (
+                <p className="text-[12px] text-destructive">{errors.password.message}</p>
+              )}
             </div>
 
-            <label className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2.5">
-              <input
-                type="checkbox"
-                {...register("isActive")}
-                className="size-4 rounded border-border accent-primary"
-              />
-              <span className="text-[13px] text-foreground">Active account</span>
-            </label>
+            <div className="space-y-1.5">
+              <label className="block text-[13px] font-medium text-foreground">
+                Roles
+              </label>
+              <div className="flex items-center gap-4 rounded-lg border border-border bg-background px-4 py-3">
+                <label className="flex items-center gap-2.5 text-[13px] text-foreground cursor-pointer">
+                  <input
+                    type="checkbox"
+                    value={UserRoles.ADMIN}
+                    {...register("roles")}
+                    className="size-4 rounded border-border accent-primary cursor-pointer"
+                  />
+                  Admin
+                </label>
+                <label className="flex items-center gap-2.5 text-[13px] text-foreground cursor-pointer">
+                  <input
+                    type="checkbox"
+                    value={UserRoles.MEMBER}
+                    {...register("roles")}
+                    className="size-4 rounded border-border accent-primary cursor-pointer"
+                  />
+                  Member
+                </label>
+              </div>
+              {errors.roles && (
+                <p className="text-[12px] text-destructive">{errors.roles.message}</p>
+              )}
+            </div>
 
             <div className="flex justify-end gap-3 pt-2">
               <Button
@@ -457,9 +507,17 @@ export default function UsersPage() {
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={creating} className="gap-1.5">
-                <Plus className="size-3.5" />
-                {creating ? "Creating..." : "Create User"}
+              <Button
+                type="submit"
+                disabled={!isValid || createUser.isPending}
+                className="gap-1.5"
+              >
+                {createUser.isPending ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <Plus className="size-3.5" />
+                )}
+                {createUser.isPending ? "Creating..." : "Create User"}
               </Button>
             </div>
           </form>

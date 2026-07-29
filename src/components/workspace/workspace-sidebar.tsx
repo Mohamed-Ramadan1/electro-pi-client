@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuthStore } from "@/stores/auth-store";
+import { useIsAdmin } from "@/hooks/use-role";
 
 const workspaceItems: { key: string; href: string; icon: LucideIcon }[] = [
   { key: "overview", href: "/home", icon: LayoutDashboard },
@@ -76,6 +77,12 @@ export function WorkspaceSidebar() {
   const { open: collapsed } = useSidebar();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
+  const isAdmin = useIsAdmin();
+
+  const visibleWorkspaceItems =
+    isAdmin
+      ? workspaceItems
+      : workspaceItems.filter((item) => item.key !== "users");
 
   const handleLogout = () => {
     logout();
@@ -118,7 +125,7 @@ export function WorkspaceSidebar() {
           ) : null}
           <SidebarGroupContent>
             <SidebarMenu>
-              {workspaceItems.map((item) => (
+              {visibleWorkspaceItems.map((item) => (
                 <SidebarNavItem
                   key={item.key}
                   href={item.href}

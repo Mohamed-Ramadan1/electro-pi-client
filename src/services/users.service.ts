@@ -1,39 +1,43 @@
 import { apiClient } from "@/lib/api/client";
-import type { PaginatedResponse, UserDto } from "@/types/api";
+import type { UserDto, UsersListResponse, SingleUserResponse } from "@/types/api";
 
 export const usersService = {
-  list: async (params?: {
-    page?: number;
-    limit?: number;
-    search?: string;
-  }): Promise<PaginatedResponse<UserDto>> => {
-    const res = await apiClient.get<PaginatedResponse<UserDto>>("/users", {
-      params,
-    });
+  list: async (): Promise<UsersListResponse> => {
+    const res = await apiClient.get<UsersListResponse>("/users");
     return res.data;
   },
 
-  getById: async (id: string): Promise<UserDto> => {
-    const res = await apiClient.get<{ data: UserDto }>(`/users/${id}`);
-    return res.data.data;
+  getById: async (id: string): Promise<SingleUserResponse> => {
+    const res = await apiClient.get<SingleUserResponse>(`/users/${id}`);
+    return res.data;
   },
 
   create: async (data: {
     name: string;
     email: string;
     password: string;
-    role: string;
-  }): Promise<UserDto> => {
-    const res = await apiClient.post<{ data: UserDto }>("/users", data);
-    return res.data.data;
+    roles: string[];
+  }): Promise<SingleUserResponse> => {
+    const res = await apiClient.post<SingleUserResponse>("/users", data);
+    return res.data;
   },
 
   update: async (
     id: string,
-    data: Partial<{ name: string; email: string; role: string; isActive: boolean }>,
-  ): Promise<UserDto> => {
-    const res = await apiClient.patch<{ data: UserDto }>(`/users/${id}`, data);
-    return res.data.data;
+    data: Partial<{ name: string; email: string; roles: string[] }>,
+  ): Promise<SingleUserResponse> => {
+    const res = await apiClient.patch<SingleUserResponse>(`/users/${id}`, data);
+    return res.data;
+  },
+
+  activate: async (id: string): Promise<SingleUserResponse> => {
+    const res = await apiClient.patch<SingleUserResponse>(`/users/${id}/activate`);
+    return res.data;
+  },
+
+  deactivate: async (id: string): Promise<SingleUserResponse> => {
+    const res = await apiClient.patch<SingleUserResponse>(`/users/${id}/deactivate`);
+    return res.data;
   },
 
   remove: async (id: string): Promise<void> => {

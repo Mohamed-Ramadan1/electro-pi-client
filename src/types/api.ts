@@ -33,9 +33,23 @@ export interface UserDto {
   id: string;
   name: string;
   email: string;
-  role: string;
+  roles: string[];
   isActive: boolean;
+  profileImage: string | null;
   createdAt: string;
+  updatedAt: string;
+  termsAcceptedAt: string | null;
+  termsVersion: string | null;
+}
+
+export interface UsersListResponse {
+  message: string;
+  users: UserDto[];
+}
+
+export interface SingleUserResponse {
+  message: string;
+  user: UserDto;
 }
 
 export interface PaginatedResponse<T> {
@@ -53,3 +67,12 @@ export const STRONG_PASSWORD_REGEX =
 
 export const STRONG_PASSWORD_MESSAGE =
   "Password must be at least 8 characters with uppercase, lowercase, number, and special character";
+
+export const UserRoles = {
+  MEMBER: "member",
+  ADMIN: "admin",
+} as const;
+
+export type UserRole = (typeof UserRoles)[keyof typeof UserRoles];
+
+export const DEFAULT_ROLE = UserRoles.MEMBER;

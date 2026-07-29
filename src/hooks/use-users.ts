@@ -3,21 +3,17 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { usersService } from "@/services/users.service";
-import type { PaginatedResponse, UserDto } from "@/types/api";
+import type { UsersListResponse, SingleUserResponse } from "@/types/api";
 
-export function useUsers(params?: {
-  page?: number;
-  limit?: number;
-  search?: string;
-}) {
-  return useQuery<PaginatedResponse<UserDto>>({
-    queryKey: ["users", params],
-    queryFn: () => usersService.list(params),
+export function useUsers() {
+  return useQuery<UsersListResponse>({
+    queryKey: ["users"],
+    queryFn: () => usersService.list(),
   });
 }
 
 export function useUser(id: string) {
-  return useQuery<UserDto>({
+  return useQuery<SingleUserResponse>({
     queryKey: ["users", id],
     queryFn: () => usersService.getById(id),
     enabled: !!id,
@@ -49,8 +45,7 @@ export function useUpdateUser() {
     }: { id: string } & Partial<{
       name: string;
       email: string;
-      role: string;
-      isActive: boolean;
+      roles: string[];
     }>) => usersService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
@@ -58,6 +53,36 @@ export function useUpdateUser() {
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to update user");
+    },
+  });
+}
+
+export function useActivateUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: usersService.activate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast.success("User activated");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to activate user");
+    },
+  });
+}
+
+export function useDeactivateUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: usersService.deactivate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast.success("User deactivated");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to deactivate user");
     },
   });
 }
