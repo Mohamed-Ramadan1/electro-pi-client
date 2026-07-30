@@ -14,14 +14,13 @@ import {
   LogOut,
   Check,
   Camera,
+  AtSign,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email"),
 });
 
 type ProfileValues = z.infer<typeof profileSchema>;
@@ -36,20 +35,19 @@ export default function ProfilePage() {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors, isDirty },
   } = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
-    defaultValues: {
-      name: user?.name ?? "",
-      email: user?.email ?? "",
-    },
+    defaultValues: { name: user?.name ?? "" },
   });
 
   const onSubmit = async (data: ProfileValues) => {
     setSaving(true);
     await new Promise((r) => setTimeout(r, 600));
-    updateUser({ name: data.name, email: data.email });
+    updateUser({ name: data.name });
     toast.success("Profile updated successfully");
+    reset({ name: data.name });
     setSaving(false);
   };
 
@@ -60,8 +58,13 @@ export default function ProfilePage() {
 
   if (!user) return null;
 
+  const memberSince = new Date().toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+
   return (
-    <div className="mx-auto max-w-3xl px-6 py-10">
+    <div className="px-6 py-10">
       <div className="border-b border-border pb-8">
         <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-highlight">
           Account
@@ -69,158 +72,132 @@ export default function ProfilePage() {
         <h1 className="mt-2 font-display text-4xl italic text-foreground">
           Profile
         </h1>
-        <p className="mt-3 text-sm text-foreground-muted">
-          Manage your personal information and account settings.
-        </p>
       </div>
 
-      <div className="mt-10 grid gap-10 lg:grid-cols-[240px_1fr]">
-        <div className="flex flex-col items-center">
-          <div className="relative">
-            <Avatar className="size-24 rounded-2xl">
-              <AvatarFallback className="rounded-2xl bg-primary/10 text-primary font-display text-3xl italic">
-                {user.initials}
-              </AvatarFallback>
-            </Avatar>
-            <button
-              disabled
-              className="absolute -bottom-1 -right-1 grid size-8 cursor-not-allowed place-items-center rounded-full border-2 border-background bg-foreground text-background opacity-40"
+      <div className="mt-10 grid gap-8 lg:grid-cols-[280px_1fr]">
+        <div className="flex flex-col rounded-xl border border-border bg-surface overflow-hidden">
+          <div className="flex flex-col items-center px-8 pb-6 pt-10">
+            <div className="relative">
+              <div className="size-24 rounded-full bg-gradient-to-br from-primary/30 via-highlight/20 to-primary/10 p-[3px]">
+                <div className="flex size-full items-center justify-center rounded-full bg-surface">
+                  <span className="font-display text-3xl italic text-foreground">
+                    {user.initials}
+                  </span>
+                </div>
+              </div>
+              <button
+                disabled
+                className="absolute -bottom-0.5 -right-0.5 flex size-7 cursor-not-allowed items-center justify-center rounded-full border-2 border-surface bg-foreground text-background opacity-25"
+              >
+                <Camera className="size-3" />
+              </button>
+            </div>
+            <h2 className="mt-5 font-display text-xl font-semibold text-foreground">
+              {user.name}
+            </h2>
+            <span
+              className="mt-1.5 inline-flex rounded-full border px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider"
             >
-              <Camera className="size-3.5" />
-            </button>
+              {user.roles.includes("admin") ? "Administrator" : "Member"}
+            </span>
           </div>
-          <h2 className="mt-4 font-display text-xl font-semibold text-foreground">
-            {user.name}
-          </h2>
-          <p className="mt-1 text-sm text-foreground-muted">{user.email}</p>
-          <span className="mt-3 rounded-full border border-border bg-surface px-3 py-1 text-[11px] font-medium text-foreground-muted">
-            Member
-          </span>
+
+          <div className="border-t border-border bg-muted/30 px-6 py-5 space-y-4">
+            <div className="flex items-center gap-3">
+              <AtSign className="size-4 shrink-0 text-foreground-muted" />
+              <div className="min-w-0">
+                <p className="text-[11px] uppercase tracking-wider text-foreground-muted/60">
+                  Email
+                </p>
+                <p className="text-[13px] text-foreground truncate">
+                  {user.email}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Calendar className="size-4 shrink-0 text-foreground-muted" />
+              <div className="min-w-0">
+                <p className="text-[11px] uppercase tracking-wider text-foreground-muted/60">
+                  Member since
+                </p>
+                <p className="text-[13px] text-foreground">{memberSince}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Shield className="size-4 shrink-0 text-foreground-muted" />
+              <div className="min-w-0">
+                <p className="text-[11px] uppercase tracking-wider text-foreground-muted/60">
+                  Plan
+                </p>
+                <p className="text-[13px] text-foreground">
+                  Free &mdash; 5 members, 3 projects
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div>
+        <div className="space-y-5">
           <form
             onSubmit={handleSubmit(onSubmit)}
             className="rounded-xl border border-border bg-surface p-6"
           >
             <h3 className="text-sm font-semibold text-foreground">
-              Personal Information
+              Display name
             </h3>
             <p className="mt-1 text-[12px] text-foreground-muted">
-              Update your display name and email address.
+              This is the name others will see across the workspace.
             </p>
 
-            <div className="mt-6 space-y-5">
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="name"
-                  className="block text-[13px] font-medium text-foreground"
-                >
-                  Display name
-                </label>
-                <div className="relative">
-                  <User className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-foreground-muted" />
-                  <input
-                    id="name"
-                    {...register("name")}
-                    className="h-11 w-full rounded-lg border border-border bg-background pl-10 pr-3 text-sm text-foreground shadow-sm transition-all duration-200 placeholder:text-foreground/40 focus-visible:outline-none focus-visible:border-primary/40 focus-visible:ring-4 focus-visible:ring-primary/10"
-                  />
-                </div>
-                {errors.name && (
-                  <p className="text-[12px] text-destructive">
-                    {errors.name.message}
-                  </p>
-                )}
+            <div className="mt-4 flex items-center gap-3">
+              <div className="relative flex-1">
+                <User className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-foreground-muted" />
+                <input
+                  id="name"
+                  {...register("name")}
+                  className="h-10 w-full rounded-lg border border-border bg-background pl-10 pr-3 text-[13px] text-foreground shadow-sm transition-all duration-200 placeholder:text-foreground/40 focus-visible:outline-none focus-visible:border-primary/40 focus-visible:ring-4 focus-visible:ring-primary/10"
+                />
               </div>
-
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="email"
-                  className="block text-[13px] font-medium text-foreground"
-                >
-                  Email address
-                </label>
-                <div className="relative">
-                  <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-foreground-muted" />
-                  <input
-                    id="email"
-                    {...register("email")}
-                    className="h-11 w-full rounded-lg border border-border bg-background pl-10 pr-3 text-sm text-foreground shadow-sm transition-all duration-200 placeholder:text-foreground/40 focus-visible:outline-none focus-visible:border-primary/40 focus-visible:ring-4 focus-visible:ring-primary/10"
-                  />
-                </div>
-                {errors.email && (
-                  <p className="text-[12px] text-destructive">
-                    {errors.email.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-6 flex items-center gap-3">
               <Button
                 type="submit"
                 disabled={!isDirty || saving}
-                className="gap-1.5"
+                size="sm"
+                className="gap-1.5 shrink-0"
               >
                 <Check className="size-3.5" />
-                {saving ? "Saving..." : "Save changes"}
+                {saving ? "Saving..." : "Save"}
               </Button>
-              {isDirty && (
-                <button
-                  type="button"
-                  className="text-[13px] text-foreground-muted transition-colors hover:text-foreground"
-                >
-                  Cancel
-                </button>
-              )}
             </div>
+            {errors.name && (
+              <p className="mt-1.5 text-[12px] text-destructive">
+                {errors.name.message}
+              </p>
+            )}
           </form>
 
-          <div className="mt-6 rounded-xl border border-border bg-surface p-6">
-            <h3 className="text-sm font-semibold text-foreground">
-              Account Details
-            </h3>
-            <div className="mt-4 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-info/10">
-                  <Shield className="size-4 text-info" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-medium text-foreground">
-                    Account created
-                  </p>
-                  <p className="text-[12px] text-foreground-muted">
-                    {new Date().toLocaleDateString("en-US", {
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </p>
-                </div>
+          <div className="rounded-xl border border-border bg-surface p-5">
+            <div className="flex items-center gap-3">
+              <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted">
+                <Mail className="size-4 text-foreground-muted" />
               </div>
-              <div className="flex items-center gap-3">
-                <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-success/10">
-                  <Calendar className="size-4 text-success" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-medium text-foreground">
-                    Plan
-                  </p>
-                  <p className="text-[12px] text-foreground-muted">
-                    Free plan — 5 team members, 3 projects
-                  </p>
-                </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] font-medium text-foreground">
+                  Email address
+                </p>
+                <p className="text-[12px] text-foreground-muted truncate">
+                  {user.email}
+                </p>
               </div>
             </div>
           </div>
 
-          <div className="mt-6 rounded-xl border border-destructive/20 bg-destructive/5 p-6">
-            <div className="flex items-start justify-between gap-4">
+          <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-5">
+            <div className="flex items-center justify-between gap-4">
               <div>
                 <h3 className="text-sm font-semibold text-foreground">
                   Sign out
                 </h3>
-                <p className="mt-1 text-[12px] text-foreground-muted">
+                <p className="mt-0.5 text-[12px] text-foreground-muted">
                   You will be redirected to the login page.
                 </p>
               </div>

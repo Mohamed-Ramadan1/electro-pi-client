@@ -6,7 +6,16 @@ import {
   LayoutDashboard,
   FolderKanban,
   CheckSquare,
+  User,
   Users,
+  UserCog,
+  Wrench,
+  StickyNote,
+  Sparkles,
+  LifeBuoy,
+  Bell,
+  MessageSquare,
+  CalendarDays,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -23,14 +32,27 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
 import { useAuthStore } from "@/stores/auth-store";
 import { useIsAdmin } from "@/hooks/use-role";
 
-const workspaceItems: { key: string; href: string; icon: LucideIcon }[] = [
+const mainItems: { key: string; href: string; icon: LucideIcon }[] = [
   { key: "overview", href: "/home", icon: LayoutDashboard },
   { key: "projects", href: "/projects", icon: FolderKanban },
   { key: "tasks", href: "/tasks", icon: CheckSquare },
-  { key: "users", href: "/users", icon: Users },
+  { key: "working-zone", href: "/working-zone", icon: Wrench },
+  { key: "events", href: "/events", icon: CalendarDays },
+];
+
+const userItems: { key: string; href: string; icon: LucideIcon; adminOnly?: boolean }[] = [
+  { key: "assistant", href: "/assistant", icon: Sparkles },
+  { key: "teams", href: "/teams", icon: Users },
+  { key: "notes", href: "/notes", icon: StickyNote },
+  { key: "messages", href: "/messages", icon: MessageSquare },
+  { key: "notifications", href: "/notifications", icon: Bell },
+  { key: "profile", href: "/profile", icon: User },
+  { key: "support", href: "/support", icon: LifeBuoy },
+  { key: "users", href: "/users", icon: UserCog, adminOnly: true },
 ];
 
 function SidebarNavItem({
@@ -44,13 +66,13 @@ function SidebarNavItem({
   label: string;
   isActive: boolean;
 }) {
-  const { open: collapsed } = useSidebar();
+  const { open: expanded } = useSidebar();
 
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
         isActive={isActive}
-        tooltip={collapsed ? label : undefined}
+        tooltip={!expanded ? label : undefined}
         render={
           <Link href={href} className="flex items-center gap-3 text-[13px]" />
         }
@@ -65,20 +87,19 @@ function SidebarNavItem({
 export function WorkspaceSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { open: collapsed } = useSidebar();
+  const { open: expanded } = useSidebar();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const isAdmin = useIsAdmin();
-
-  const visibleWorkspaceItems =
-    isAdmin
-      ? workspaceItems
-      : workspaceItems.filter((item) => item.key !== "users");
 
   const handleLogout = () => {
     logout();
     router.push("/auth");
   };
+
+  const visibleUserItems = userItems.filter(
+    (item) => !item.adminOnly || isAdmin,
+  );
 
   const isCurrentPath = (href: string) => {
     if (href === "/home") return pathname === "/home";
@@ -94,7 +115,7 @@ export function WorkspaceSidebar() {
               E
             </span>
           </span>
-          {!collapsed ? (
+          {expanded ? (
             <div className="flex flex-col leading-tight">
               <span className="font-display text-[13px] font-semibold tracking-tight text-foreground">
                 Electro-Pi
@@ -109,14 +130,37 @@ export function WorkspaceSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          {!collapsed ? (
+          {expanded ? (
             <SidebarGroupLabel className="font-mono text-[10px] uppercase tracking-[0.2em] text-foreground-muted">
-              Workspace
+              Main
             </SidebarGroupLabel>
           ) : null}
           <SidebarGroupContent>
             <SidebarMenu>
-              {visibleWorkspaceItems.map((item) => (
+              {mainItems.map((item) => (
+                <SidebarNavItem
+                  key={item.key}
+                  href={item.href}
+                  icon={item.icon}
+                  label={item.key}
+                  isActive={isCurrentPath(item.href)}
+                />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {expanded && <Separator className="mx-3" />}
+
+        <SidebarGroup>
+          {expanded ? (
+            <SidebarGroupLabel className="font-mono text-[10px] uppercase tracking-[0.2em] text-foreground-muted">
+              You
+            </SidebarGroupLabel>
+          ) : null}
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {visibleUserItems.map((item) => (
                 <SidebarNavItem
                   key={item.key}
                   href={item.href}
@@ -137,7 +181,7 @@ export function WorkspaceSidebar() {
               {user?.initials ?? "??"}
             </AvatarFallback>
           </Avatar>
-          {!collapsed ? (
+          {expanded ? (
             <div className="flex min-w-0 flex-1 flex-col leading-tight">
               <span className="truncate text-[13px] font-medium text-foreground">
                 {user?.name ?? "User"}
@@ -147,7 +191,7 @@ export function WorkspaceSidebar() {
               </span>
             </div>
           ) : null}
-          {!collapsed && (
+          {expanded && (
             <button
               onClick={handleLogout}
               className="ml-auto shrink-0 rounded-md p-1 text-foreground-muted transition-colors hover:text-destructive"

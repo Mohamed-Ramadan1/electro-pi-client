@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -64,9 +64,10 @@ function formatDate(date: string) {
 
 export default function ProjectsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const isAdmin = useIsAdmin();
   const { data, isLoading } = useProjects();
-  const { data: usersData } = useUsers();
+  const { data: usersData } = useUsers(isAdmin);
   const createProject = useCreateProject();
 
   const projects = data?.projects ?? [];
@@ -93,6 +94,12 @@ export default function ProjectsPage() {
   });
 
   const selectedMembers = watch("members") ?? [];
+
+  useEffect(() => {
+    if (isAdmin && searchParams.get("create") === "true") {
+      setCreateOpen(true);
+    }
+  }, [isAdmin, searchParams]);
 
   const totalPages = Math.ceil(projects.length / ITEMS_PER_PAGE);
   const paginatedProjects = projects.slice(
