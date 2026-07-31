@@ -16,6 +16,7 @@ import {
   Bell,
   MessageSquare,
   CalendarDays,
+  AlarmClock,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -45,6 +46,7 @@ const mainItems: { key: string; href: string; icon: LucideIcon }[] = [
 ];
 
 const userItems: { key: string; href: string; icon: LucideIcon; adminOnly?: boolean }[] = [
+  { key: "reminders", href: "/reminders", icon: AlarmClock },
   { key: "assistant", href: "/assistant", icon: Sparkles },
   { key: "teams", href: "/teams", icon: Users },
   { key: "notes", href: "/notes", icon: StickyNote },

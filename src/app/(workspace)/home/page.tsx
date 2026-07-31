@@ -6,7 +6,6 @@ import {
   Sparkles,
   CheckCircle2,
   Circle,
-  TrendingUp,
   FolderKanban,
   ChevronDown,
   ChevronUp,
@@ -29,22 +28,18 @@ const stats = [
   {
     label: "Active Projects",
     value: "12",
-    detail: "+2 this month",
   },
   {
     label: "Tasks Completed",
     value: "148",
-    detail: "92% on time",
   },
   {
     label: "In Progress Tasks",
     value: "8",
-    detail: "3 due today",
   },
   {
     label: "Todo Tasks",
     value: "14",
-    detail: "5 high priority",
   },
 ];
 
@@ -130,10 +125,6 @@ export default function DashboardHome() {
             </p>
             <p className="mt-3 font-display text-3xl italic text-foreground">
               {stat.value}
-            </p>
-            <p className="mt-1 flex items-center gap-1 text-[11px] text-foreground-muted">
-              <TrendingUp className="size-3 text-success" />
-              {stat.detail}
             </p>
           </div>
         ))}

@@ -132,7 +132,7 @@ export function WorkspaceHeader() {
               >
                 <MessageSquare className="size-[18px]" />
                 {unreadMsgs > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 flex size-[18px] items-center justify-center rounded-full bg-highlight text-[9px] font-bold text-highlight-foreground ring-2 ring-background">
+                  <span className="absolute -right-0.5 -top-0.5 flex size-5 items-center justify-center rounded-full bg-highlight text-[10px] font-bold text-white ring-2 ring-background">
                     {unreadMsgs}
                   </span>
                 )}
@@ -210,7 +210,7 @@ export function WorkspaceHeader() {
                 >
                   <Bell className="size-[18px]" />
                   {unreadNotifs > 0 && (
-                    <span className="absolute -right-0.5 -top-0.5 flex size-[18px] items-center justify-center rounded-full bg-highlight text-[9px] font-bold text-highlight-foreground ring-2 ring-background">
+                    <span className="absolute -right-0.5 -top-0.5 flex size-5 items-center justify-center rounded-full bg-highlight text-[10px] font-bold text-white ring-2 ring-background">
                       {unreadNotifs}
                     </span>
                   )}
