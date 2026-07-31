@@ -37,12 +37,13 @@ import { Separator } from "@/components/ui/separator";
 import { useAuthStore } from "@/stores/auth-store";
 import { useIsAdmin } from "@/hooks/use-role";
 
-const mainItems: { key: string; href: string; icon: LucideIcon }[] = [
+const mainItems: { key: string; href: string; icon: LucideIcon; adminOnly?: boolean }[] = [
   { key: "overview", href: "/home", icon: LayoutDashboard },
   { key: "projects", href: "/projects", icon: FolderKanban },
   { key: "tasks", href: "/tasks", icon: CheckSquare },
   { key: "working-zone", href: "/working-zone", icon: Wrench },
   { key: "events", href: "/events", icon: CalendarDays },
+  { key: "users", href: "/users", icon: UserCog, adminOnly: true },
 ];
 
 const userItems: { key: string; href: string; icon: LucideIcon; adminOnly?: boolean }[] = [
@@ -54,7 +55,6 @@ const userItems: { key: string; href: string; icon: LucideIcon; adminOnly?: bool
   { key: "notifications", href: "/notifications", icon: Bell },
   { key: "profile", href: "/profile", icon: User },
   { key: "support", href: "/support", icon: LifeBuoy },
-  { key: "users", href: "/users", icon: UserCog, adminOnly: true },
 ];
 
 function SidebarNavItem({
@@ -99,6 +99,9 @@ export function WorkspaceSidebar() {
     router.push("/auth");
   };
 
+  const visibleMainItems = mainItems.filter(
+    (item) => !item.adminOnly || isAdmin,
+  );
   const visibleUserItems = userItems.filter(
     (item) => !item.adminOnly || isAdmin,
   );
@@ -139,7 +142,7 @@ export function WorkspaceSidebar() {
           ) : null}
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainItems.map((item) => (
+              {visibleMainItems.map((item) => (
                 <SidebarNavItem
                   key={item.key}
                   href={item.href}

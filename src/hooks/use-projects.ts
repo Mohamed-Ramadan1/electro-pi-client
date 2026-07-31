@@ -12,11 +12,11 @@ export function useProjects() {
   });
 }
 
-export function useProject(id: string) {
+export function useProject(id: string, enabled = true) {
   return useQuery<SingleProjectResponse>({
     queryKey: ["projects", id],
     queryFn: () => projectsService.getById(id),
-    enabled: !!id,
+    enabled: enabled && !!id,
   });
 }
 
@@ -63,8 +63,18 @@ export function useDeleteProject() {
 
   return useMutation({
     mutationFn: projectsService.remove,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
+    onSuccess: async (_data, id) => {
+      await queryClient.cancelQueries({ queryKey: ["projects", id] });
+      queryClient.removeQueries({ queryKey: ["projects", id] });
+
+      const prev = queryClient.getQueryData<ProjectsListResponse>(["projects"]);
+      if (prev) {
+        queryClient.setQueryData<ProjectsListResponse>(["projects"], {
+          ...prev,
+          projects: prev.projects.filter((p) => p.id !== id),
+        });
+      }
+
       toast.success("Project removed");
     },
     onError: (error: Error) => {
