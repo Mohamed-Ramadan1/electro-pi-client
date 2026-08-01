@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { notesService } from "@/services/notes.service";
-import type { NotesListResponse, NoteDto } from "@/types/api";
+import type { NotesListResponse, SingleNoteResponse, NoteDto } from "@/types/api";
 
 export function useNotes() {
   return useQuery<NotesListResponse, Error, NoteDto[]>({
@@ -61,6 +61,44 @@ export function useDeleteNote() {
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to delete note");
+    },
+  });
+}
+
+export function useNote(id: string) {
+  return useQuery<SingleNoteResponse>({
+    queryKey: ["notes", id],
+    queryFn: () => notesService.getById(id),
+    enabled: !!id,
+  });
+}
+
+export function useActivateNote() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: notesService.activate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      toast.success("Note activated");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to activate note");
+    },
+  });
+}
+
+export function useDeactivateNote() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: notesService.deactivate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      toast.success("Note deactivated");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to deactivate note");
     },
   });
 }

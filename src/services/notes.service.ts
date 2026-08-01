@@ -36,6 +36,21 @@ export const notesService = {
     return res.data;
   },
 
+  getById: async (id: string): Promise<SingleNoteResponse> => {
+    const res = await apiClient.get<SingleNoteResponse>(`/notes/${id}`);
+    return res.data;
+  },
+
+  activate: async (id: string): Promise<SingleNoteResponse> => {
+    const res = await apiClient.patch<SingleNoteResponse>(`/notes/${id}/activate`);
+    return res.data;
+  },
+
+  deactivate: async (id: string): Promise<SingleNoteResponse> => {
+    const res = await apiClient.patch<SingleNoteResponse>(`/notes/${id}/deactivate`);
+    return res.data;
+  },
+
   remove: async (id: string): Promise<{ message: string }> => {
     const res = await apiClient.delete<{ message: string }>(`/notes/${id}`);
     return res.data;

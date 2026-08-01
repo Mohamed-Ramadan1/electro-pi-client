@@ -14,6 +14,8 @@ import {
   ChevronRight,
   Loader2,
   AlertTriangle,
+  Power,
+  PowerOff,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -30,6 +32,8 @@ import {
   useCreateNote,
   useUpdateNote,
   useDeleteNote,
+  useActivateNote,
+  useDeactivateNote,
 } from "@/hooks/use-notes";
 import type { NoteDto } from "@/types/api";
 
@@ -44,6 +48,8 @@ export default function NotesPage() {
   const createNote = useCreateNote();
   const updateNote = useUpdateNote();
   const deleteNote = useDeleteNote();
+  const activateNote = useActivateNote();
+  const deactivateNote = useDeactivateNote();
 
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -134,6 +140,17 @@ export default function NotesPage() {
       setConfirmDelete(null);
     },
     [deleteNote],
+  );
+
+  const toggleActive = useCallback(
+    (note: NoteDto) => {
+      if (note.isActive) {
+        deactivateNote.mutate(note.id);
+      } else {
+        activateNote.mutate(note.id);
+      }
+    },
+    [activateNote, deactivateNote],
   );
 
   const formatDate = (iso: string) =>
@@ -227,7 +244,10 @@ export default function NotesPage() {
                   {paginatedNotes.map((note) => (
                     <div
                       key={note.id}
-                      className="group relative flex flex-col rounded-xl border border-border bg-surface p-5 transition-colors hover:border-primary/20 hover:bg-background"
+                      className={cn(
+                        "group relative flex flex-col rounded-xl border border-border bg-surface p-5 transition-colors hover:border-primary/20 hover:bg-background",
+                        !note.isActive && "opacity-60 grayscale",
+                      )}
                     >
                       <h3 className="font-display text-base italic text-foreground pr-8 line-clamp-1">
                         {note.title}
@@ -250,6 +270,23 @@ export default function NotesPage() {
                         {formatDate(note.updatedAt)}
                       </p>
                       <div className="absolute right-3 top-3 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => toggleActive(note)}
+                          disabled={activateNote.isPending || deactivateNote.isPending}
+                          className={cn(
+                            "grid size-7 place-items-center rounded-md transition-colors",
+                            note.isActive
+                              ? "text-foreground-muted hover:bg-destructive/10 hover:text-destructive"
+                              : "text-foreground-muted hover:bg-success/10 hover:text-success",
+                          )}
+                          title={note.isActive ? "Deactivate" : "Activate"}
+                        >
+                          {note.isActive ? (
+                            <PowerOff className="size-3.5" />
+                          ) : (
+                            <Power className="size-3.5" />
+                          )}
+                        </button>
                         <button
                           onClick={() => openEdit(note)}
                           className="grid size-7 place-items-center rounded-md text-foreground-muted hover:bg-muted hover:text-foreground transition-colors"
