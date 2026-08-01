@@ -22,6 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { Button } from "@/components/ui/button";
+import { ComingSoonBanner } from "@/components/workspace/coming-soon-banner";
 
 const ticketSchema = z.object({
   subject: z.string().min(5, "Subject must be at least 5 characters"),
@@ -92,7 +93,9 @@ export default function SupportPage() {
   };
 
   return (
-    <div className="px-6 py-10">
+    <div>
+      <ComingSoonBanner />
+      <div className="px-6 py-10">
       <div className="border-b border-border pb-8">
         <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-highlight">
           Help & Support
@@ -341,6 +344,7 @@ export default function SupportPage() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

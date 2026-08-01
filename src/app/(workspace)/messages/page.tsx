@@ -4,6 +4,7 @@ import { useState } from "react";
 import { MessageSquare, Send, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ComingSoonBanner } from "@/components/workspace/coming-soon-banner";
 
 type Conversation = {
   id: string;
@@ -55,7 +56,9 @@ export default function MessagesPage() {
   };
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full flex-col">
+      <ComingSoonBanner />
+      <div className="flex h-full flex-1 min-h-0">
       <div className="flex w-full flex-col lg:w-80 lg:shrink-0 lg:border-r lg:border-border">
         <div className="shrink-0 border-b border-border px-4 py-5">
           <h1 className="font-display text-xl italic text-foreground">Messages</h1>
@@ -219,6 +222,7 @@ export default function MessagesPage() {
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

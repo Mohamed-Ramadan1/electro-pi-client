@@ -1,10 +1,13 @@
 "use client";
 
 import { Wrench } from "lucide-react";
+import { ComingSoonBanner } from "@/components/workspace/coming-soon-banner";
 
 export default function WorkingZonePage() {
   return (
-    <div className="flex h-full items-center justify-center px-6 py-10">
+    <div>
+      <ComingSoonBanner />
+      <div className="flex h-full items-center justify-center px-6 py-10">
       <div className="flex flex-col items-center text-center">
         <div className="flex size-16 items-center justify-center rounded-2xl bg-muted">
           <Wrench className="size-8 text-foreground-muted" />
@@ -16,6 +19,7 @@ export default function WorkingZonePage() {
           Your dedicated space to focus, build, and collaborate. Coming soon.
         </p>
       </div>
+    </div>
     </div>
   );
 }

@@ -23,6 +23,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { ComingSoonBanner } from "@/components/workspace/coming-soon-banner";
 
 const eventSchema = z.object({
   title: z.string().min(2, "Title is required"),
@@ -88,7 +89,9 @@ export default function EventsPage() {
   const nextEvent = upcomingEvents[0] ?? null;
 
   return (
-    <div className="px-6 py-10">
+    <div>
+      <ComingSoonBanner />
+      <div className="px-6 py-10">
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-8">
         <div>
           <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-highlight">
@@ -364,6 +367,7 @@ export default function EventsPage() {
           </form>
         </DialogContent>
       </Dialog>
+    </div>
     </div>
   );
 }

@@ -13,6 +13,7 @@ import {
   Filter,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ComingSoonBanner } from "@/components/workspace/coming-soon-banner";
 
 type Notification = {
   id: string;
@@ -128,7 +129,9 @@ export default function NotificationsPage() {
   const unreadCount = notifications.filter((n) => n.unread).length;
 
   return (
-    <div className="px-6 py-10">
+    <div>
+      <ComingSoonBanner />
+      <div className="px-6 py-10">
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-8">
         <div>
           <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-highlight">
@@ -198,6 +201,7 @@ export default function NotificationsPage() {
           No notifications in this category.
         </p>
       )}
+    </div>
     </div>
   );
 }

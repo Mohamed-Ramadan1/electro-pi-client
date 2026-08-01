@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Sparkles, Send, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
+import { ComingSoonBanner } from "@/components/workspace/coming-soon-banner";
 
 type ChatMessage = { role: "user" | "assistant"; text: string };
 
@@ -52,6 +53,7 @@ export default function AssistantPage() {
 
   return (
     <div className="flex h-full flex-col">
+      <ComingSoonBanner />
       <div className="shrink-0 border-b border-border px-6 py-5">
         <div className="flex items-center gap-3">
           <div className="flex size-10 items-center justify-center rounded-xl bg-highlight/10">
