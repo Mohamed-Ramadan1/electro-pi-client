@@ -5,10 +5,11 @@ import { toast } from "sonner";
 import { usersService } from "@/services/users.service";
 import type { UsersListResponse, SingleUserResponse } from "@/types/api";
 
-export function useUsers() {
+export function useUsers(enabled = true) {
   return useQuery<UsersListResponse>({
     queryKey: ["users"],
     queryFn: () => usersService.list(),
+    enabled,
   });
 }
 

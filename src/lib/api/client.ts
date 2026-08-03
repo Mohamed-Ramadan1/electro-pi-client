@@ -6,7 +6,7 @@ const SKIP_401_REDIRECT = [
   "/auth/login",
   "/auth/register",
   "/auth/logout",
-  "/users/members/me",
+  "/members/me",
 ];
 
 const apiClient = axios.create({

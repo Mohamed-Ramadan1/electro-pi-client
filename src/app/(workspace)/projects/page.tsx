@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -64,9 +64,10 @@ function formatDate(date: string) {
 
 export default function ProjectsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const isAdmin = useIsAdmin();
   const { data, isLoading } = useProjects();
-  const { data: usersData } = useUsers();
+  const { data: usersData } = useUsers(isAdmin);
   const createProject = useCreateProject();
 
   const projects = data?.projects ?? [];
@@ -93,6 +94,12 @@ export default function ProjectsPage() {
   });
 
   const selectedMembers = watch("members") ?? [];
+
+  useEffect(() => {
+    if (isAdmin && searchParams.get("create") === "true") {
+      setCreateOpen(true);
+    }
+  }, [isAdmin, searchParams]);
 
   const totalPages = Math.ceil(projects.length / ITEMS_PER_PAGE);
   const paginatedProjects = projects.slice(
@@ -452,6 +459,7 @@ function ProjectCard({
   const overflow = Math.max(0, memberCount - 4);
   const ownerInitials = getInitials(project.creator?.name ?? "");
   const imageUrl = getImageUrl(project.projectImage);
+  const [imgFailed, setImgFailed] = useState(false);
 
   return (
     <button
@@ -459,10 +467,11 @@ function ProjectCard({
       className="group w-full rounded-xl border border-border bg-card text-left overflow-hidden transition-all duration-200 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 focus-visible:outline-none focus-visible:border-primary/40 focus-visible:ring-4 focus-visible:ring-primary/10"
     >
       <div className="relative h-40 w-full overflow-hidden bg-muted">
-        {imageUrl ? (
+        {imageUrl && !imgFailed ? (
           <img
             src={imageUrl}
             alt={project.name}
+            onError={() => setImgFailed(true)}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (

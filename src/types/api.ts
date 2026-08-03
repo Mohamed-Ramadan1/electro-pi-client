@@ -165,3 +165,46 @@ export interface SingleTaskResponse {
   message: string;
   task: TaskDto;
 }
+
+export interface NoteDto {
+  id: string;
+  title: string;
+  content: string;
+  imageUrl: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NotesListResponse {
+  message: string;
+  data: NoteDto[];
+}
+
+export interface SingleNoteResponse {
+  message: string;
+  data: NoteDto;
+}
+
+export interface NotificationDto {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  isRead: boolean;
+  readAt: string | null;
+  referenceId: string | null;
+  referenceType: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NotificationsListResponse {
+  message: string;
+  notifications: NotificationDto[];
+}
+
+export interface NotificationsCountResponse {
+  message: string;
+  count: number;
+}

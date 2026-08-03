@@ -24,6 +24,7 @@ function toFormData(data: {
 export const projectsService = {
   list: async (): Promise<ProjectsListResponse> => {
     const res = await apiClient.get<ProjectsListResponse>("/members");
+    console.log("[ProjectsService] 📋 GET /members response:", res.data);
     return res.data;
   },
 

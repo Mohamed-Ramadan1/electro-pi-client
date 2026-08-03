@@ -95,7 +95,8 @@ export default function ProjectDetailPage() {
   const router = useRouter();
   const isAdmin = useIsAdmin();
   const id = params.id as string;
-  const { data, isLoading, isError } = useProject(id);
+  const [deleting, setDeleting] = useState(false);
+  const { data, isLoading, isError } = useProject(id, !deleting);
   const { data: usersData } = useUsers();
   const deleteProject = useDeleteProject();
   const closeProject = useCloseProject();
@@ -127,11 +128,9 @@ export default function ProjectDetailPage() {
     reopenProject.isPending;
 
   const handleDelete = () => {
-    deleteProject.mutate(id, {
-      onSuccess: () => {
-        router.push("/projects");
-      },
-    });
+    setDeleting(true);
+    router.push("/projects");
+    deleteProject.mutate(id);
   };
 
   const handleClose = () => closeProject.mutate(id);
@@ -153,6 +152,7 @@ export default function ProjectDetailPage() {
   };
 
   const bannerUrl = getImageUrl(project?.projectImage ?? null);
+  const [bannerFailed, setBannerFailed] = useState(false);
   const tasks = tasksData?.tasks ?? [];
   const todoTasks = tasks.filter((t) => t.status === tasksStatus.TODO);
   const inProgressTasks = tasks.filter((t) => t.status === tasksStatus.INPROGRESS);
@@ -274,10 +274,11 @@ export default function ProjectDetailPage() {
       </div>
 
       <div className="relative mb-8 h-64 w-full overflow-hidden rounded-xl bg-muted">
-        {bannerUrl ? (
+        {bannerUrl && !bannerFailed ? (
           <img
             src={bannerUrl}
             alt={project.name}
+            onError={() => setBannerFailed(true)}
             className="h-full w-full object-cover"
           />
         ) : (

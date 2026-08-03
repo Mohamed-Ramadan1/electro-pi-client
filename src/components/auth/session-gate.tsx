@@ -19,7 +19,7 @@ export function SessionGate({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    console.log("[SessionGate] 🔍 Calling GET /users/members/me ...");
+    console.log("[SessionGate] 🔍 Calling GET /members/me ...");
 
     authService
       .me()
