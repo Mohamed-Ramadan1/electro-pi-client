@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, LogOut, MessageSquare, Users, CheckCircle2, FolderKanban } from "lucide-react";
+import { Bell, LogOut, MessageSquare } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -16,41 +16,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-
-const mockNotifications = [
-  {
-    id: "1",
-    icon: MessageSquare,
-    title: "New comment on your task",
-    body: "Sarah commented on \"Finalize authentication flow\"",
-    time: "2m ago",
-    unread: true,
-  },
-  {
-    id: "2",
-    icon: Users,
-    title: "Added to project",
-    body: "You were added to \"Dashboard v2\" by Ahmed",
-    time: "1h ago",
-    unread: true,
-  },
-  {
-    id: "3",
-    icon: CheckCircle2,
-    title: "Task completed",
-    body: "\"API integration sync\" was marked complete",
-    time: "3h ago",
-    unread: false,
-  },
-  {
-    id: "4",
-    icon: FolderKanban,
-    title: "Project closed",
-    body: "\"Q2 Research\" has been archived",
-    time: "Yesterday",
-    unread: false,
-  },
-];
+import { formatRelativeTime } from "@/lib/utils";
+import { getNotifIcon, getNotifColor } from "@/lib/notifications";
+import { useNotificationsCount, useNotifications } from "@/hooks/use-notifications";
 
 const mockMessages = [
   {
@@ -98,7 +66,9 @@ export function WorkspaceHeader() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [msgOpen, setMsgOpen] = useState(false);
 
-  const unreadNotifs = mockNotifications.filter((n) => n.unread).length;
+  const { data: notifCount } = useNotificationsCount();
+  const { data: notifications } = useNotifications();
+  const unreadNotifs = notifCount?.count ?? 0;
   const unreadMsgs = mockMessages.filter((m) => m.unread).length;
 
   const handleLogout = () => {
@@ -227,40 +197,45 @@ export function WorkspaceHeader() {
               </span>
             </PopoverHeader>
             <div className="max-h-80 overflow-y-auto divide-y divide-border">
-              {mockNotifications.map((n) => (
-                <div
-                  key={n.id}
-                  className={cn(
-                    "flex gap-3 px-4 py-3 transition-colors hover:bg-muted/50",
-                    n.unread && "bg-primary/5",
-                  )}
-                >
+              {(notifications ?? []).slice(0, 5).map((n) => {
+                const Icon = getNotifIcon(n.type);
+                const color = getNotifColor(n.type);
+
+                return (
                   <div
+                    key={n.id}
                     className={cn(
-                      "mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg",
-                      n.unread
-                        ? "bg-highlight/10 text-highlight"
-                        : "bg-muted text-foreground-muted",
+                      "flex gap-3 px-4 py-3 transition-colors hover:bg-muted/50",
+                      !n.isRead && "bg-primary/5",
                     )}
                   >
-                    <n.icon className="size-3.5" />
+                    <div
+                      className={cn(
+                        "mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg",
+                        !n.isRead
+                          ? "bg-highlight/10 text-highlight"
+                          : "bg-muted text-foreground-muted",
+                      )}
+                    >
+                      <Icon className="size-3.5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] font-medium text-foreground leading-snug">
+                        {n.title}
+                      </p>
+                      <p className="mt-0.5 text-[12px] text-foreground-muted leading-snug">
+                        {n.message}
+                      </p>
+                      <p className="mt-1 text-[10px] text-foreground-muted/60">
+                        {formatRelativeTime(n.createdAt)}
+                      </p>
+                    </div>
+                    {!n.isRead && (
+                      <span className="mt-1.5 size-2 shrink-0 rounded-full bg-highlight" />
+                    )}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-medium text-foreground leading-snug">
-                      {n.title}
-                    </p>
-                    <p className="mt-0.5 text-[12px] text-foreground-muted leading-snug">
-                      {n.body}
-                    </p>
-                    <p className="mt-1 text-[10px] text-foreground-muted/60">
-                      {n.time}
-                    </p>
-                  </div>
-                  {n.unread && (
-                    <span className="mt-1.5 size-2 shrink-0 rounded-full bg-highlight" />
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
             <Link
               href="/notifications"
